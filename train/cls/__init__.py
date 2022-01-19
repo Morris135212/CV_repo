@@ -3,7 +3,6 @@ from promise.dataloader import DataLoader
 from torch import nn
 from torch.autograd import Variable
 from tqdm import tqdm
-
 from eval.cls import Evaluator
 from metrics import acc_score_tensor
 from model import weights_init
