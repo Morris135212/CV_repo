@@ -1,9 +1,13 @@
 import torch
-import torchvision.datasets as datasets
 from promise.dataloader import DataLoader
-from torch.utils.data import random_split
+from torch import nn
+from torch.autograd import Variable
+from tqdm import tqdm
 
+from eval.cls import Evaluator
+from metrics import acc_score_tensor
 from model import weights_init
+from utils.torchtools import EarlyStopping
 
 
 class Trainer:
@@ -37,8 +41,40 @@ class Trainer:
             self.optim = torch.optim.Adam(self.model.parameters(), lr=lr)
         elif optimizer == "sgd":
             self.optim = torch.optim.SGD(self.model.parameters(), lr=lr, momentum=momentum)
-
+        self.criterion = nn.CrossEntropyLoss()
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size=step_size, gamma=0.5)
         self.interval = interval
         # self.include_weight = include_weight
         self.early_stopping = EarlyStopping(patience=patience, verbose=True, path=path)
+
+    def __call__(self, *args, **kwargs):
+        print("Start training")
+        for epoch in range(self.epochs):
+            print(f"At epoch {epoch}")
+            epoch_loss, epoch_acc = 0., 0.
+            length = 0
+            for i, (x,y) in enumerate(tqdm(self.train_loader),0):
+                self.model.train()
+                b_x = Variable(x).to(self.device)
+                b_y = Variable(x).to(self.device)
+                output = self.model(b_x)
+                loss = self.criterion(output, b_y)
+                epoch_loss += loss.item()*b_y.shape[0]
+                epoch_acc += acc_score_tensor(output, b_y)*b_y.shape[0]
+                length += b_y.shape[0]
+
+                self.optim.zero_grad()
+                loss.backward()
+                self.optim.step()
+                self.scheduler.step()
+                del b_x, b_y
+
+                if i % self.interval:
+                    evaluator = Evaluator(self.val_loader, self.model, self.device)
+                    results = evaluator()
+                    eval_loss, eval_acc = results["loss"], results["acc"]
+                    print(f"train loss: {epoch_loss / length}, train accuracy: {epoch_acc / length}; "
+                          f"eval loss: {eval_loss}, eval accuracy: {eval_acc}")
+                    self.early_stopping(loss, self.model)
+            if self.early_stopping.early_stop:
+                break
