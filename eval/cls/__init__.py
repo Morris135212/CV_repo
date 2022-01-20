@@ -18,8 +18,8 @@ class Evaluator:
         length = 0
         self.model.eval()
         for i, (x, y) in enumerate(self.val_loader, 0):
-            bx = Variable(x)
-            by = Variable(y)
+            bx = Variable(x).to(self.device)
+            by = Variable(y).to(self.device)
             output = self.model(bx)
             loss = self.criterion(output, by)
             total_loss += loss.item() * by.shape[0]

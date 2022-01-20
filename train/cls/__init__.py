@@ -1,5 +1,5 @@
 import torch
-from promise.dataloader import DataLoader
+from torch.utils.data import DataLoader
 from torch import nn
 from torch.autograd import Variable
 from tqdm import tqdm
@@ -52,10 +52,10 @@ class Trainer:
             print(f"At epoch {epoch}")
             epoch_loss, epoch_acc = 0., 0.
             length = 0
-            for i, (x,y) in enumerate(tqdm(self.train_loader),0):
+            for i, (x, y) in enumerate(tqdm(self.train_loader), 0):
                 self.model.train()
                 b_x = Variable(x).to(self.device)
-                b_y = Variable(x).to(self.device)
+                b_y = Variable(y).to(self.device)
                 output = self.model(b_x)
                 loss = self.criterion(output, b_y)
                 epoch_loss += loss.item()*b_y.shape[0]
@@ -68,7 +68,7 @@ class Trainer:
                 self.scheduler.step()
                 del b_x, b_y
 
-                if i % self.interval:
+                if i % self.interval == 0:
                     evaluator = Evaluator(self.val_loader, self.model, self.device)
                     results = evaluator()
                     eval_loss, eval_acc = results["loss"], results["acc"]
