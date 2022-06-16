@@ -28,7 +28,7 @@ class Trainer:
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
         self.val_loader = DataLoader(val_data, batch_size=batch_size)
-        self.batch_size=batch_size
+        self.batch_size = batch_size
         self.epochs = epochs
 
         if initialize:
