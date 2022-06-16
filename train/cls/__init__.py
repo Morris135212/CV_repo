@@ -74,6 +74,6 @@ class Trainer:
                     eval_loss, eval_acc = results["loss"], results["acc"]
                     print(f"train loss: {epoch_loss / length}, train accuracy: {epoch_acc / length}; "
                           f"eval loss: {eval_loss}, eval accuracy: {eval_acc}")
-                    self.early_stopping(loss, self.model)
+                    self.early_stopping(eval_loss, self.model)
             if self.early_stopping.early_stop:
                 break
