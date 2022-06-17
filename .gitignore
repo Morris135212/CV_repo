@@ -3,3 +3,5 @@
 images
 .idea
 **/.ipynb_checkpoints/
+runs
+output
