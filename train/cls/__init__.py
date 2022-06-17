@@ -1,3 +1,14 @@
+from pathlib import Path
+import sys
+import os
+from utils.general import increment_path
+
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[2]  # YOLOv5 root directory
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+
 import torch
 from torch.utils.data import DataLoader
 from torch import nn
@@ -24,7 +35,12 @@ class Trainer:
                  interval=1,
                  patience=20,
                  # include_weight=True,
-                 path="output/checkpoints/checkpoint.pt"):
+                 project=ROOT / 'runs/cls',  # save results to project
+                 name="exp"):
+
+        save_dir = increment_path(Path(project) / name, exist_ok=False)  # increment run
+        save_dir.mkdir(parents=True, exist_ok=True)
+        path = f"{str(save_dir)}/best.pt"
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
         self.val_loader = DataLoader(val_data, batch_size=batch_size)
